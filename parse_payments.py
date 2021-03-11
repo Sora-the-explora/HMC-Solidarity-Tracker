@@ -17,26 +17,24 @@ class EmailParseError(Exception):
 
 def parse_snippet(snippet, body):
     if "You paid" in snippet:
-        # payerName= str.lower(snippet[snippet.index("You paid"):snippet.index("$")].strip())
         dollarPos= snippet.index("$")
         decimalPos= snippet.index(".", dollarPos)
         payerAmt= snippet[dollarPos+1:decimalPos+3].strip()
-        soup = BeautifulSoup(body , "lxml")
-        # body = soup.body()
+        soup = BeautifulSoup(body, "lxml")
         payerName = soup.find_all('a')[2].text
         payerName = payerName.replace('\\r', '')
         payerName = payerName.replace('\\n', '').strip()
-        return ("outgoing", payerAmt, payerName)
+        return ("outgoing", payerName, payerAmt)
     elif "paid You" in snippet:
         payerName= str.lower(snippet[:snippet.index("paid You")].strip())
         dollarPos= snippet.index("$")
         decimalPos= snippet.index(".", dollarPos)
         payerAmt= snippet[dollarPos+1:decimalPos+3].strip()
-        return ("incoming", payerAmt, payerName)
+        return ("incoming", payerName, payerAmt)
     raise EmailParseError("Not a payment notification.")
 
 
-def parse_payments():
+def parse_payments(date_after):
     creds = None
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
@@ -46,9 +44,7 @@ def parse_payments():
         raise Exception("Logging in failed. ")
 
     service = build('gmail', 'v1', credentials=creds)
-    today=datetime.datetime.now()
-    x =  datetime.date(today.year,today.month, today.day) + timedelta(weeks=-52)
-    stringDate= str(x.year)+"/"+str(x.month)+"/"+str(x.day)
+    stringDate= str(date_after.year)+"/"+str(date_after.month)+"/"+str(date_after.day)
 
     query=f"from:venmo@venmo.com after:{stringDate}"
     response = service.users().messages().list(userId="me", q=query).execute()
@@ -59,6 +55,7 @@ def parse_payments():
         page_token = response['nextPageToken']
         response = service.users().messages().list(userId="me", q=query, pageToken=page_token).execute()
         messages.extend(response['messages'])
+    payments = []
     for message in messages:
         try:
             email = service.users().messages().get(userId= 'me', id= str(message["id"])).execute()
@@ -69,13 +66,16 @@ def parse_payments():
             data = data.replace("-","+").replace("_","/")
             decoded_data = str(base64.b64decode(data))
             result = parse_snippet(snippet, decoded_data)
-            print(result)
+            header = payload['headers']
+            for item in header:
+                if item['name'] == 'Date':
+                    date = item['value']
+            payments.append((*result,date))
         except EmailParseError:
-            print("Not a payment email")
             pass
         except Exception:
-            print("failed quite badly")
-            print(snippet)
+            pass
+    return payments
 
 
 if __name__ == "__main__":
