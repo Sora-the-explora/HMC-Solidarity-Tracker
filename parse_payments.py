@@ -15,12 +15,17 @@ class EmailParseError(Exception):
   self.strerror = arg
   self.args = {arg}
 
-def parse_snippet(snippet):
+def parse_snippet(snippet, body):
     if "You paid" in snippet:
-        payerName= str.lower(snippet[snippet.index("You paid"):snippet.index("$")].strip())
+        # payerName= str.lower(snippet[snippet.index("You paid"):snippet.index("$")].strip())
         dollarPos= snippet.index("$")
         decimalPos= snippet.index(".", dollarPos)
         payerAmt= snippet[dollarPos+1:decimalPos+3].strip()
+        soup = BeautifulSoup(body , "lxml")
+        # body = soup.body()
+        payerName = soup.find_all('a')[2].text
+        payerName = payerName.replace('\\r', '')
+        payerName = payerName.replace('\\n', '').strip()
         return ("outgoing", payerAmt, payerName)
     elif "paid You" in snippet:
         payerName= str.lower(snippet[:snippet.index("paid You")].strip())
@@ -54,31 +59,23 @@ def parse_payments():
         page_token = response['nextPageToken']
         response = service.users().messages().list(userId="me", q=query, pageToken=page_token).execute()
         messages.extend(response['messages'])
-    for message in [messages[1]]:
-        email = service.users().messages().get(userId= 'me', id= str(message["id"])).execute()
-        snippet= email['snippet']
-        payload = email['payload']
-        parts = payload.get('parts')[1]
-        data = parts['body']['data']
-        data = data.replace("-","+").replace("_","/")
-        decoded_data = str(base64.b64decode(data))
-        soup = BeautifulSoup(decoded_data , "lxml")
-        body = soup.body()
-        name = soup.find_all('a')[2].text
-        name = name.replace('\\r', '')
-        name = name.replace('\\n', '').strip()
-        print(name)
-        # for item in soup.find_all('a'):
-        #     print(item)
-        #     print("\n\n\n ARYA")
-        # indx = decoded_data.index("You paid")
-        # print(decoded_data)
+    for message in messages:
         try:
-            result = parse_snippet(snippet)
+            email = service.users().messages().get(userId= 'me', id= str(message["id"])).execute()
+            snippet= email['snippet']
+            payload = email['payload']
+            parts = payload.get('parts')[1]
+            data = parts['body']['data']
+            data = data.replace("-","+").replace("_","/")
+            decoded_data = str(base64.b64decode(data))
+            result = parse_snippet(snippet, decoded_data)
             print(result)
         except EmailParseError:
-            print("hehe no")
+            print("Not a payment email")
             pass
+        except Exception:
+            print("failed quite badly")
+            print(snippet)
 
 
 if __name__ == "__main__":
