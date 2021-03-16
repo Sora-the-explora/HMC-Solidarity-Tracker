@@ -41,7 +41,10 @@ def parse_payments(date_after):
             creds = pickle.load(token)
 
     if not creds or not creds.valid:
-        raise Exception("Logging in failed. ")
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            raise Exception("Logging in failed. ")
 
     service = build('gmail', 'v1', credentials=creds)
     stringDate= str(date_after.year)+"/"+str(date_after.month)+"/"+str(date_after.day)
@@ -76,7 +79,3 @@ def parse_payments(date_after):
         except Exception:
             pass
     return payments
-
-
-if __name__ == "__main__":
-    parse_payments()
