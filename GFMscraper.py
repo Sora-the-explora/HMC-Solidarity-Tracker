@@ -24,4 +24,3 @@ def getGFM(Initial = Initial):
 
     return total
 
-print(getGFM())

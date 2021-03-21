@@ -3,11 +3,13 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from GFMscraper import getGFM
 
 SCOPES = 'https://www.googleapis.com/auth/drive'
 sheet_id = "13vWTC-2t2f8dFaugRFTVVbrOzncR1H3nyQjOY7ogswM"
 
 def write_spreadsheet(new_payments):
+    raisedGFM = getGFM(17050)
     creds = None
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
@@ -26,3 +28,4 @@ def write_spreadsheet(new_payments):
     outgoing_body = {'values': outgoing_values}
     incoming_result = service.spreadsheets().values().append(spreadsheetId=sheet_id, range="Incoming Funds", body=incoming_body, valueInputOption="USER_ENTERED").execute()
     outgoing_result = service.spreadsheets().values().append(spreadsheetId=sheet_id, range="Outgoing Funds", body=outgoing_body, valueInputOption="USER_ENTERED").execute()
+    GFM = service.spreadsheets().values().update(spreadsheetId=sheet_id, range="GoFundMe!A2", values=str(raisedGFM),  valueInputOption="USER_ENTERED").execute()
