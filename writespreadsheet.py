@@ -26,6 +26,7 @@ def write_spreadsheet(new_payments):
     outgoing_values = [[*i[1:]] for i in new_payments if i[0] == "outgoing"]
     incoming_body = {'values': incoming_values}
     outgoing_body = {'values': outgoing_values}
+    gfm_body = {'values' : [[raisedGFM]]}
     incoming_result = service.spreadsheets().values().append(spreadsheetId=sheet_id, range="Incoming Funds", body=incoming_body, valueInputOption="USER_ENTERED").execute()
     outgoing_result = service.spreadsheets().values().append(spreadsheetId=sheet_id, range="Outgoing Funds", body=outgoing_body, valueInputOption="USER_ENTERED").execute()
-    GFM = service.spreadsheets().values().update(spreadsheetId=sheet_id, range="GoFundMe!A2", values=str(raisedGFM),  valueInputOption="USER_ENTERED").execute()
+    GFM = service.spreadsheets().values().update(spreadsheetId=sheet_id, range="GoFundMe!A2", body=gfm_body,  valueInputOption="USER_ENTERED").execute()
