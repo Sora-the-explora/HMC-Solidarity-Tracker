@@ -34,7 +34,7 @@ def parse_snippet(snippet, body):
     raise EmailParseError("Not a payment notification.")
 
 
-def parse_payments(date_after):
+def parse_payments(date_after, date_before):
     creds = None
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
@@ -48,6 +48,7 @@ def parse_payments(date_after):
 
     service = build('gmail', 'v1', credentials=creds)
     stringDate= str(date_after.year)+"/"+str(date_after.month)+"/"+str(date_after.day)
+    stringDateBefore = str(date_before.year)+"/"+str(date_before.month)+"/"+str(date_before.day)
 
     query=f"from:venmo@venmo.com after:{stringDate}"
     response = service.users().messages().list(userId="me", q=query).execute()
