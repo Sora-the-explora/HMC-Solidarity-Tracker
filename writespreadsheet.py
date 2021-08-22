@@ -28,7 +28,12 @@ def write_spreadsheet(new_payments):
     gfm_body = {'values' : [[raisedGFM]]}
     incoming_sheet = service.spreadsheets().values().get(spreadsheetId=sheet_id, range="Incoming Funds").execute().get('values', [])
     all_incoming = incoming_sheet[1:]+incoming_values
-    incoming_formatted = [(i[0], float(i[1]), i[2]) for i in all_incoming]
+    incoming_formatted = []
+    for i in all_incoming:
+        try:
+            incoming_formatted.append((i[0], float(i[1]), i[2]))
+        except:
+            pass
     shorter_incoming = list(set(incoming_formatted))
 
     incoming_body = {'values' : start+shorter_incoming}
