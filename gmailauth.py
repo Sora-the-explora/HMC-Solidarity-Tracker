@@ -12,6 +12,9 @@ def main():
     Lists the user's Gmail labels.
     """
     creds = None
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
 
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -20,7 +23,7 @@ def main():
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
-            flow.authorization_url(access_type='offline', include_granted_scopes='true')
+            # flow.authorization_url(access_type='offline', include_granted_scopes='true')
             creds = flow.run_local_server(port=8080)
         # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
