@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 
-Initial = 17050
+Initial = 23218
 
 def getGFM(Initial = Initial):
     """
