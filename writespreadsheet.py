@@ -9,7 +9,7 @@ SCOPES = 'https://www.googleapis.com/auth/drive'
 sheet_id = "13vWTC-2t2f8dFaugRFTVVbrOzncR1H3nyQjOY7ogswM"
 
 def write_spreadsheet(new_payments):
-    raisedGFM = getGFM(23218)
+    raisedGFM = getGFM(26859)
     creds = None
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
